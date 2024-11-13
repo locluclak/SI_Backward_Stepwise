@@ -95,6 +95,86 @@ def interval_SFS(X, Y, K, lst_SELEC_k, lst_Portho, a, b):
     return Vminus, Vplus
     # return np.around(Vminus, 10), np.around(Vplus, 10)
 
+def differen(a, b):
+    c1 = None
+    c2 = None
+    for i in a:
+        if i not in b:
+            c1 = i
+    for i in b:
+        if i not in a:
+            c2 = i
+    return c1, c2
+def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
+    n_sample, n_fea = X.shape
+    if K == n_fea:
+        return -np.inf, np.inf
+    A=[]
+    B=[]
+    I = np.identity(n_sample)  
+     
+    for step in range(1, n_fea - K + 1):
+        Mk = lst_SELEC_k[step]
+        Mk_1 = lst_SELEC_k[step - 1]
+        # print(f"Mk: {Mk}")
+        # print(f"Mk-1: {Mk_1}")
+        for each in Mk_1:
+            Mj = [x for x in Mk_1 if x != each]
+            # print(f"----Mj: {Mj}")
+            jk, j = differen(Mk, Mj)
+            if jk == None and j == None:
+                continue
+            same = [x for x in Mk_1 if x != jk and x != j]
+            # print('-----------',jk, j)
+            # print('-------same',same)
+
+            Xsame = X[:, same].copy()
+            P_pp_Mk_1 = I - np.dot(np.dot(Xsame, np.linalg.inv(np.dot(Xsame.T, Xsame))), Xsame.T)
+            Xjk = X[:, [jk]].copy()
+            Xj = X[:, [j]].copy()
+
+            sign_projk = np.sign(np.dot(Xjk.T , np.dot(P_pp_Mk_1, Y)).item()).copy()
+            projk = sign_projk*(np.dot(Xjk.T, P_pp_Mk_1)) / np.linalg.norm(P_pp_Mk_1.dot(Xjk))
+            # if step == 1:
+            # A.append(-1*projk[0].copy())
+            # B.append(0)
+
+            sign_proj = np.sign(np.dot(Xj.T , np.dot(P_pp_Mk_1, Y)).item()).copy()
+            proj = sign_proj*(np.dot(Xj.T, P_pp_Mk_1)) / np.linalg.norm(P_pp_Mk_1.dot(Xj))
+
+            A.append(-1*(projk-proj)[0].copy())
+            B.append(0)
+            A.append(-1*(projk+proj)[0].copy())
+            B.append(0)
+
+    A = np.array(A)
+    B = np.array(B).reshape((-1,1))
+
+    Ac = np.dot(A,  b)
+    Az = np.dot(A,  a)
+
+    Vminus = np.NINF
+    Vplus = np.inf
+
+    for j in range(len(B)):
+        left = Ac[j][0]
+        right = B[j][0] - Az[j][0]
+
+        if abs(right) < 1e-14:
+            right = 0
+        if abs(left) < 1e-14:
+            left = 0
+        
+        if left == 0:
+            if right < 0:
+                print('Error')
+        else:
+            temp = right / left
+            if left > 0: 
+                Vplus = min(Vplus, temp)
+            else:
+                Vminus = max(Vminus, temp)
+    return Vminus, Vplus
 
 def interval_AIC(X, Y, Portho, K, a, b, Sigma, seed = 0):
     n_sample, n_fea = X.shape
@@ -120,12 +200,12 @@ def interval_AIC(X, Y, Portho, K, a, b, Sigma, seed = 0):
             intervals = intersection.Intersec(intervals, itv)
     return intervals 
 
-def OC_AIC_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,seed = 0):
+def OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,seed = 0):
 
     lst_SELECk, lst_P = ForwardSelection.list_residualvec(Xtilde, Ytilde)
-
+    lst_SELECk.reverse()
     itvDA = interval_DA(ns, nt, XsXt_, B, S_, h_, a, b)
-    itvFS = [interval_SFS(Xtilde, Ytilde, 
+    itvBS = [interval_SBS(Xtilde, Ytilde, 
                                     len(SELECTION_F),
                                     lst_SELECk, lst_P,
                                     GAMMA.dot(a), GAMMA.dot(b))]
@@ -133,19 +213,19 @@ def OC_AIC_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, 
                                         lst_P, len(SELECTION_F), 
                                         GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
 
-    finalinterval = intersection.Intersec(itvDA, itvFS) 
+    finalinterval = intersection.Intersec(itvDA, itvBS) 
     finalinterval = intersection.Intersec(finalinterval, itvAIC)
-    # print(f"da: {itvDA} | fs: {itvFS} | aic: {itvAIC}")
+    # print(f"da: {itvDA} | fs: {itvBS} | aic: {itvAIC}")
     return finalinterval
-def OC_fixedFS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,):
 
-    lst_SELECk, lst_P = ForwardSelection.list_residualvec(Xtilde, Ytilde)
 
+def OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,):
+
+    lst_SELECk = ForwardSelection.list_residualvec_BS(Xtilde, Ytilde)[0]
+    lst_SELECk.reverse()
     itvDA = interval_DA(ns, nt, XsXt_, B, S_, h_, a, b)
-    itvFS = [interval_SFS(Xtilde, Ytilde, 
-                                    len(SELECTION_F),
-                                    lst_SELECk, lst_P,
-                                    GAMMA.dot(a), GAMMA.dot(b))]
+    itvBS = [interval_SBS(Xtilde, Ytilde, len(SELECTION_F),
+                                    lst_SELECk, GAMMA.dot(a), GAMMA.dot(b))]
     # print(itvDA, itvFS)
-    finalinterval = intersection.Intersec(itvDA, itvFS) 
-    return finalinterval, itvDA, itvFS
+    finalinterval = intersection.Intersec(itvDA, itvBS) 
+    return finalinterval, itvDA, itvBS

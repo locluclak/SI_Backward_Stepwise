@@ -40,6 +40,25 @@ def fixedSelection(Y, X, k):
                     selection.append(feature)
         # print("RSS of selected feature:", rss)
     return selection, rsdv   
+def fixedBS(Y, X, k):
+    p = X.shape[1]
+    selection = list(range(p))
+    if k == p:
+        rss, rsdv = RSS(Y,X)
+        return selection, rsdv
+
+    for i in range(p - k):
+        rss = np.inf
+        for j in selection:
+            sele = [x for x in selection if x != j]
+            X_temp = X[:, sele].copy()
+            rss_temp, rsdv_temp = RSS(Y, X_temp)
+            if rss > rss_temp:
+                rss = rss_temp
+                rsdv = rsdv_temp
+                jselec = j
+        selection = [x for x in selection if x != jselec]
+    return selection, rsdv
 
 def RSS(Y, X):
     rss = 0
@@ -59,5 +78,18 @@ def list_residualvec(X, Y) -> list:
         selec_k = fixedSelection(Y, X, k)[0]
         lst_SELEC_k.append(selec_k)
         X_Mk = X[:, sorted(selec_k)].copy()
+        lst_Portho.append(np.identity(n) - np.dot(np.dot(X_Mk, np.linalg.inv(np.dot(X_Mk.T, X_Mk))), X_Mk.T))
+    return lst_SELEC_k, lst_Portho
+
+def list_residualvec_BS(X, Y) -> list:
+    # Create 1 ... p matrixes which multiplies Y to get "residual vector of best k-subset"
+    lst_Portho = []
+    lst_SELEC_k = []
+    n = Y.shape[0]
+    p = X.shape[1] 
+    for k in range(1, p+1):
+        selec_k = fixedBS(Y, X, k)[0]
+        lst_SELEC_k.append(selec_k)
+        X_Mk = X[:, selec_k].copy()
         lst_Portho.append(np.identity(n) - np.dot(np.dot(X_Mk, np.linalg.inv(np.dot(X_Mk.T, X_Mk))), X_Mk.T))
     return lst_SELEC_k, lst_Portho
