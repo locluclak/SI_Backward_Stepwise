@@ -13,7 +13,18 @@ def SelectionAIC(Y,X,Sigma):
             bset = sset
             AIC = aic
     return bset
+def SelectionAICforBS(Y,X,Sigma):
+    AIC = np.inf
+    n, p = X.shape
 
+    for i in range(1, p + 1):
+        sset, rsdv = fixedBS(Y, X, i)
+        aic = rsdv.T.dot(Sigma.dot(rsdv)) + 2*i
+        # print(aic)
+        if aic < AIC:
+            bset = sset
+            AIC = aic
+    return bset
 def fixedSelection(Y, X, k):
     selection = []
     rest = list(range(X.shape[1]))

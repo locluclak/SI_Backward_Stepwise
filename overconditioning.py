@@ -176,20 +176,20 @@ def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
                 Vminus = max(Vminus, temp)
     return Vminus, Vplus
 
-def interval_AIC(X, Y, Portho, K, a, b, Sigma, seed = 0):
+def interval_AIC_BS(X, Y, Portho, K, a, b, Sigma, seed = 0):
     n_sample, n_fea = X.shape
 
     A = []
-    Pka = Portho[K].dot(a) 
-    Pkb = Portho[K].dot(b)
+    Pka = Portho[K-1].dot(a) 
+    Pkb = Portho[K-1].dot(b)
 
     intervals = [(-np.inf, np.inf)] 
 
-    for step in range(1, n_fea + 1):
-        if step != K:
+    for step in range(0, n_fea):
+        if step != K-1:
             Pja = Portho[step].dot(a)
             Pjb = Portho[step].dot(b)
-            g1 = Pka.T.dot(Sigma.dot(Pka)) - Pja.T.dot(Sigma.dot(Pja)) + 2*(K - step)
+            g1 = Pka.T.dot(Sigma.dot(Pka)) - Pja.T.dot(Sigma.dot(Pja)) + 2*(K - step-1)
             g2 = Pka.T.dot(Sigma.dot(Pkb)) + Pkb.T.dot(Sigma.dot(Pka)) - Pja.T.dot(Sigma.dot(Pjb)) - Pjb.T.dot(Sigma.dot(Pja))
             g3 = Pkb.T.dot(Sigma.dot(Pkb)) - Pjb.T.dot(Sigma.dot(Pjb))
 
@@ -202,14 +202,14 @@ def interval_AIC(X, Y, Portho, K, a, b, Sigma, seed = 0):
 
 def OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,seed = 0):
 
-    lst_SELECk, lst_P = ForwardSelection.list_residualvec(Xtilde, Ytilde)
+    lst_SELECk, lst_P = ForwardSelection.list_residualvec_BS(Xtilde, Ytilde)
     lst_SELECk.reverse()
     itvDA = interval_DA(ns, nt, XsXt_, B, S_, h_, a, b)
     itvBS = [interval_SBS(Xtilde, Ytilde, 
                                     len(SELECTION_F),
-                                    lst_SELECk, lst_P,
+                                    lst_SELECk,
                                     GAMMA.dot(a), GAMMA.dot(b))]
-    itvAIC = interval_AIC(Xtilde, Ytilde, 
+    itvAIC = interval_AIC_BS(Xtilde, Ytilde, 
                                         lst_P, len(SELECTION_F), 
                                         GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
 
