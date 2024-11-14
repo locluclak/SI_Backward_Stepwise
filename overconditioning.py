@@ -34,66 +34,6 @@ def interval_DA(ns, nt, X_, B, S_, h_, a, b):
         interval = intersection.Intersec(interval, itv)
     return interval
 
-def interval_SFS(X, Y, K, lst_SELEC_k, lst_Portho, a, b):
-    n_sample, n_fea = X.shape
-
-    A=[]
-    B=[]
-
-    I = np.identity(n_sample)   
-
-    for step in range(1, K+1):
-        P_pp_Mk_1 = lst_Portho[step - 1]
-        Xjk = X[:, [lst_SELEC_k[step][-1]]].copy()
-        sign_projk = np.sign(np.dot(Xjk.T , np.dot(P_pp_Mk_1, Y)).item()).copy()
-        
-        projk = sign_projk*(np.dot(Xjk.T, P_pp_Mk_1)) / np.linalg.norm(P_pp_Mk_1.dot(Xjk))
-
-        if step == 1:
-            A.append(-1*projk[0].copy())
-            B.append(0)
-        for otherfea in range(n_fea):
-            if otherfea not in lst_SELEC_k[step]:
-
-                Xj = X[:, [otherfea]].copy()
-                sign_proj = np.sign(np.dot(Xj.T , np.dot(P_pp_Mk_1, Y)).item()).copy()
-                proj = sign_proj*(np.dot(Xj.T, P_pp_Mk_1)) / np.linalg.norm(P_pp_Mk_1.dot(Xj))
-
-                A.append(-1*(projk-proj)[0].copy())
-                B.append(0)
-                A.append(-1*(projk+proj)[0].copy())
-                B.append(0)
-
-
-    A = np.array(A)
-    B = np.array(B).reshape((-1,1))
-
-    Ac = np.dot(A,  b)
-    Az = np.dot(A,  a)
-
-    Vminus = np.NINF
-    Vplus = np.inf
-
-    for j in range(len(B)):
-        left = Ac[j][0]
-        right = B[j][0] - Az[j][0]
-
-        if abs(right) < 1e-14:
-            right = 0
-        if abs(left) < 1e-14:
-            left = 0
-        
-        if left == 0:
-            if right < 0:
-                print('Error')
-        else:
-            temp = right / left
-            if left > 0: 
-                Vplus = min(Vplus, temp)
-            else:
-                Vminus = max(Vminus, temp)
-    return Vminus, Vplus
-    # return np.around(Vminus, 10), np.around(Vplus, 10)
 
 def differen(a, b):
     c1 = None

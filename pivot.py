@@ -101,7 +101,7 @@ def pvalue_DS(seed, ns, nt, p, true_betaS, true_betaT):
 
     return selective_p_value
 
-def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT):
+def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT, k):
     """Return final p_value"""
     np.random.seed(seed)
 
@@ -136,9 +136,10 @@ def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT):
 
     Sigmatilde = GAMMA.T.dot(Sigma.dot(GAMMA))
     # Best model from 1...p models by AIC criterion
-    SELECTION_F = FS.SelectionAICforBS(Ytilde, Xtilde, Sigmatilde)
-    k = 3
-    # SELECTION_F = FS.fixedBS(Ytilde, Xtilde, k)[0]
+    if k == -1:
+        SELECTION_F = FS.SelectionAICforBS(Ytilde, Xtilde, Sigmatilde)
+    else:
+        SELECTION_F = FS.fixedBS(Ytilde, Xtilde, k)[0]
     Xt_M = Xt[:, sorted(SELECTION_F)].copy()
 
     # Compute eta
@@ -162,10 +163,12 @@ def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT):
     # Test statistic
     etaTY = np.dot(eta.T, Y).item()
     # print(f"etay: {etaTY}")
-    # finalinterval = overconditioning.OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)[0]
-    finalinterval = overconditioning.OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)
-    # finalinterval = parametric.para_DA_FSwithfixedK(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F)
-    # finalinterval = parametric.para_DA_FSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed)
+    if k == -1:
+        # finalinterval = overconditioning.OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)
+        finalinterval = parametric.para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed)
+    else:
+        # finalinterval = overconditioning.OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)[0]
+        finalinterval = parametric.para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F)
     # print(f"Final interval: {finalinterval}")
 
     # Naive
