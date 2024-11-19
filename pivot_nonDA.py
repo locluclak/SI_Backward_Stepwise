@@ -61,9 +61,9 @@ def pvalue_SI(seed, n, p, true_betaT):
 
     lst_SELECk = FS.list_residualvec_BS(X, Y)[0]    
     lst_SELECk.reverse()
-    print(lst_SELECk)
+    # print(lst_SELECk)
 
-    finalinterval = [overconditioning.interval_SBS(X, Y, len(SELECTION_F), lst_SELECk, a, b)]
+    finalinterval = overconditioning.interval_SBS2(X, Y, len(SELECTION_F), lst_SELECk, a, b)
     
     # finalinterval = overconditioning.OC_fixedFS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)[0]
     # # finalinterval = overconditioning.OC_AIC_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)

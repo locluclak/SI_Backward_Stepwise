@@ -21,7 +21,7 @@ def count_floats_less_equal(file_path, threshold=0.05):
 if __name__ == "__main__":
 
     alpha = 0.05 #/ (3*comb(5,3)) #/ (5*2**4)
-    file_path = 'Experiment/LstpBS_para_AIC_FPR_50_5.txt'  
+    file_path = 'Experiment/LstpBS_naive_AIC_FPR_100_5.txt'  
     result,ls = count_floats_less_equal(file_path, threshold=alpha)
     
     print(file_path)

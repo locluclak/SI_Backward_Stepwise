@@ -45,7 +45,7 @@ def differen(a, b):
         if i not in a:
             c2 = i
     return c1, c2
-def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
+def interval_SBSabs(X, Y, K, lst_SELEC_k, a, b):
     n_sample, n_fea = X.shape
     if K == n_fea:
         return -np.inf, np.inf
@@ -115,6 +115,36 @@ def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
             else:
                 Vminus = max(Vminus, temp)
     return Vminus, Vplus
+def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
+    n_sample, n_fea = X.shape
+    intervals = [(-np.inf, np.inf)]
+    if K == n_fea:
+        return intervals
+    
+    I = np.identity(n_sample)  
+    for step in range(1, n_fea - K + 1):
+        jk = [x for x in lst_SELEC_k[step-1] if x not in lst_SELEC_k[step]][0]
+        X_jk = X[:, lst_SELEC_k[step]].copy()
+        Pjk = I - np.dot(np.dot(X_jk, np.linalg.inv(np.dot(X_jk.T, X_jk))), X_jk.T)
+
+        Pjk_a = Pjk.dot(a)
+        Pjk_b = Pjk.dot(b)
+        for j in lst_SELEC_k[step-1]:
+            if j != jk:
+                Mj = [i for i in lst_SELEC_k[step-1] if i != j]
+                X_j = X[:, Mj].copy()
+                Pj = I - np.dot(np.dot(X_j, np.linalg.inv(np.dot(X_j.T, X_j))), X_j.T)
+                Pj_a = Pj.dot(a)
+                Pj_b = Pj.dot(b)
+
+                g1 = Pjk_a.T.dot(Pjk_a) - Pj_a.T.dot(Pj_a)
+                g2 = Pjk_a.T.dot(Pjk_b) + Pjk_b.T.dot(Pjk_a) - Pj_a.T.dot(Pj_b) - Pj_b.T.dot(Pj_a)
+                g3 = Pjk_b.T.dot(Pjk_b) - Pj_b.T.dot(Pj_b)
+                g1, g2, g3 = g1.item(), g2.item(), g3.item()
+                itv = intersection.solve_quadratic_inequality(g3, g2, g1)
+
+                intervals = intersection.Intersec(intervals, itv)
+    return intervals 
 
 def interval_AIC_BS(X, Y, Portho, K, a, b, Sigma, seed = 0):
     n_sample, n_fea = X.shape
@@ -145,10 +175,10 @@ def OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SEL
     lst_SELECk, lst_P = ForwardSelection.list_residualvec_BS(Xtilde, Ytilde)
     lst_SELECk.reverse()
     itvDA = interval_DA(ns, nt, XsXt_, B, S_, h_, a, b)
-    itvBS = [interval_SBS(Xtilde, Ytilde, 
+    itvBS = interval_SBS(Xtilde, Ytilde, 
                                     len(SELECTION_F),
                                     lst_SELECk,
-                                    GAMMA.dot(a), GAMMA.dot(b))]
+                                    GAMMA.dot(a), GAMMA.dot(b))
     itvAIC = interval_AIC_BS(Xtilde, Ytilde, 
                                         lst_P, len(SELECTION_F), 
                                         GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
@@ -164,8 +194,8 @@ def OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, 
     lst_SELECk = ForwardSelection.list_residualvec_BS(Xtilde, Ytilde)[0]
     lst_SELECk.reverse()
     itvDA = interval_DA(ns, nt, XsXt_, B, S_, h_, a, b)
-    itvBS = [interval_SBS(Xtilde, Ytilde, len(SELECTION_F),
-                                    lst_SELECk, GAMMA.dot(a), GAMMA.dot(b))]
+    itvBS = interval_SBS(Xtilde, Ytilde, len(SELECTION_F),
+                                    lst_SELECk, GAMMA.dot(a), GAMMA.dot(b))
     # print(itvDA, itvFS)
     finalinterval = intersection.Intersec(itvDA, itvBS) 
     return finalinterval, itvDA, itvBS

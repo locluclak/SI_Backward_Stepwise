@@ -164,11 +164,11 @@ def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT, k):
     etaTY = np.dot(eta.T, Y).item()
     # print(f"etay: {etaTY}")
     if k == -1:
-        # finalinterval = overconditioning.OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)
-        finalinterval = parametric.para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed)
+        finalinterval = overconditioning.OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)
+        # finalinterval = parametric.para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed)
     else:
-        # finalinterval = overconditioning.OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)[0]
-        finalinterval = parametric.para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F)
+        finalinterval = overconditioning.OC_fixedBS_interval(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, basis_var, S_, h_, SELECTION_F, GAMMA)[0]
+        # finalinterval = parametric.para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F)
     # print(f"Final interval: {finalinterval}")
 
     # Naive
