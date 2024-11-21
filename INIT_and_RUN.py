@@ -8,7 +8,7 @@ def run(iter = 0):
     # print("Seed:",seed)
 
     #___________________________________________________________
-    ns = 50
+    ns = 100
     nt = 10
     p = 5
     betat = 1
@@ -22,15 +22,15 @@ def run(iter = 0):
     # pvalue = pivot_nonDA.pvalue_SI(seed, ns, p, true_beta_t)
 
     # Save pvalue into file
-    OCorPARA_FIXorAIC_FPRorTPR ='para_fixed_TPR'
+    OCorPARA_FIXorAIC_FPRorTPR ='para_AIC_TPR'
     # filename = f'Experiment/LstpBS_{OCorPARA_FIXorAIC_FPRorTPR}_{ns}_{p}.txt'
     filename = f'Experiment/LstBS_{OCorPARA_FIXorAIC_FPRorTPR}_{ns}_{p}_{betat}.txt'
-    with open(filename, 'a') as f:
-        f.write(str(pvalue)+ '\n')
+    # with open(filename, 'a') as f:
+    #     f.write(str(pvalue)+ '\n')
     return pvalue
 
 if __name__ == "__main__":
-    for i in range(100):
+    for i in range(10):
         # st = time.time()
         print(run())
         # en = time.time()
