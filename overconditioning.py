@@ -145,7 +145,53 @@ def interval_SBS(X, Y, K, lst_SELEC_k, a, b):
 
                 intervals = intersection.Intersec(intervals, itv)
     return intervals 
+def interval_BIC(X, Y, Portho, K, a, b, Sigma, seed = 0):
+    n_sample, n_fea = X.shape
 
+    A = []
+    Pka = Portho[K-1].dot(a) 
+    Pkb = Portho[K-1].dot(b)
+
+    intervals = [(-np.inf, np.inf)] 
+
+    for step in range(0, n_fea):
+        if step != K-1:
+            Pja = Portho[step].dot(a)
+            Pjb = Portho[step].dot(b)
+            g1 = Pka.T.dot(Sigma.dot(Pka)) - Pja.T.dot(Sigma.dot(Pja)) + np.log(n_sample)*(K - step-1)
+            g2 = Pka.T.dot(Sigma.dot(Pkb)) + Pkb.T.dot(Sigma.dot(Pka)) - Pja.T.dot(Sigma.dot(Pjb)) - Pjb.T.dot(Sigma.dot(Pja))
+            g3 = Pkb.T.dot(Sigma.dot(Pkb)) - Pjb.T.dot(Sigma.dot(Pjb))
+
+            g1, g2, g3 = g1.item(), g2.item(), g3.item()
+
+            itv = intersection.solve_quadratic_inequality(g3, g2, g1, seed)
+
+            intervals = intersection.Intersec(intervals, itv)
+    return intervals 
+
+def interval_AdjustedR2(X, Y, Portho, K, a, b, Sigma, seed = 0):
+    n_sample, n_fea = X.shape
+
+    Pka = Portho[K-1].dot(a) 
+    Pkb = Portho[K-1].dot(b)
+
+    intervals = [(-np.inf, np.inf)] 
+    ljk = (n_sample - 1)/(n_sample - K - 1)
+    for step in range(0, n_fea):
+        if step != K-1:
+            lj = (n_sample - 1)/(n_sample - step-1 - 1)
+            Pja = Portho[step].dot(a)
+            Pjb = Portho[step].dot(b)
+            g1 = ljk*Pka.T.dot(Pka) - lj*Pja.T.dot(Pja)
+            g2 = ljk*Pka.T.dot(Pkb) + ljk*Pkb.T.dot(Pka) - lj*Pja.T.dot(Pjb) - lj*Pjb.T.dot(Pja)
+            g3 = ljk*Pkb.T.dot(Pkb) - lj*Pjb.T.dot(Pjb)
+
+            g1, g2, g3 = g1.item(), g2.item(), g3.item()
+
+            itv = intersection.solve_quadratic_inequality(g3, g2, g1, seed)
+
+            intervals = intersection.Intersec(intervals, itv)
+    return intervals 
 def interval_AIC_BS(X, Y, Portho, K, a, b, Sigma, seed = 0):
     n_sample, n_fea = X.shape
 
@@ -170,7 +216,7 @@ def interval_AIC_BS(X, Y, Portho, K, a, b, Sigma, seed = 0):
             intervals = intersection.Intersec(intervals, itv)
     return intervals 
 
-def OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,seed = 0):
+def OC_DA_BS_Criterion(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SELECTION_F, GAMMA,seed = 0):
 
     lst_SELECk, lst_P = ForwardSelection.list_residualvec_BS(Xtilde, Ytilde)
     lst_SELECk.reverse()
@@ -179,12 +225,18 @@ def OC_DA_BS_AIC(ns, nt, a, b, XsXt_, Xtilde, Ytilde, Sigmatilde, B, S_, h_, SEL
                                     len(SELECTION_F),
                                     lst_SELECk,
                                     GAMMA.dot(a), GAMMA.dot(b))
-    itvAIC = interval_AIC_BS(Xtilde, Ytilde, 
+    # itvCriterion = interval_AIC_BS(Xtilde, Ytilde, 
+    #                                     lst_P, len(SELECTION_F), 
+    #                                     GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
+    itvCriterion = interval_BIC(Xtilde, Ytilde, 
                                         lst_P, len(SELECTION_F), 
                                         GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
+    # itvCriterion = interval_AdjustedR2(Xtilde, Ytilde, 
+    #                                     lst_P, len(SELECTION_F), 
+    #                                     GAMMA.dot(a), GAMMA.dot(b), Sigmatilde, seed)
 
     finalinterval = intersection.Intersec(itvDA, itvBS) 
-    finalinterval = intersection.Intersec(finalinterval, itvAIC)
+    finalinterval = intersection.Intersec(finalinterval, itvCriterion)
     # print(f"da: {itvDA} | fs: {itvBS} | aic: {itvAIC}")
     return finalinterval
 

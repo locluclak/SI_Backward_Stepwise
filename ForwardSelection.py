@@ -25,6 +25,33 @@ def SelectionAICforBS(Y,X,Sigma):
             bset = sset
             AIC = aic
     return bset
+
+def SelectionBIC(Y,X,Sigma):
+    BIC = np.inf
+    n, p = X.shape
+    
+    for i in range(1, p+1):
+        sset, rsdv = fixedBS(Y, X, i)
+        bic = rsdv.T.dot(Sigma.dot(rsdv)) + i*np.log(n)
+        if bic < BIC:
+            bset = sset
+            BIC = bic
+    return bset
+
+def SelectionAdjR2(Y,X):
+    AdjR2 = -np.inf
+    n, p = X.shape
+    TSS = np.linalg.norm(Y - np.mean(Y))**2
+    for i in range(1, p+1):
+        sset, rsdv = fixedBS(Y, X, i)
+        RSS = np.linalg.norm(rsdv)**2
+
+        adjr2 = 1 - (RSS/(n-i-1))/(TSS/(n-1))
+        if adjr2 > AdjR2:
+            bset = sset
+            AdjR2 = adjr2
+    return bset
+
 def fixedSelection(Y, X, k):
     selection = []
     rest = list(range(X.shape[1]))
