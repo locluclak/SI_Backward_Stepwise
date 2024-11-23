@@ -22,7 +22,7 @@ def run(iter = 0):
     # pvalue = pivot_nonDA.pvalue_SI(seed, ns, p, true_beta_t)
 
     # Save pvalue into file
-    OCorPARA_FIXorAIC_FPRorTPR ='para_AIC_TPR'
+    OCorPARA_FIXorAIC_FPRorTPR ='para_AdjR2_TPR'
     # filename = f'Experiment/LstpBS_{OCorPARA_FIXorAIC_FPRorTPR}_{ns}_{p}.txt'
     filename = f'Experiment/LstBS_{OCorPARA_FIXorAIC_FPRorTPR}_{ns}_{p}_{betat}.txt'
     with open(filename, 'a') as f:
