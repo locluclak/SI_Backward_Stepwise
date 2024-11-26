@@ -52,6 +52,7 @@ def para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed = 0):
     detectedinter = []
     z =  -20
     zmax = 20
+    citv = 0
     while z < zmax:
         z += 0.0001
 
@@ -72,13 +73,14 @@ def para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed = 0):
         Ytildeinloop = np.dot(GAMMAdeltaz, Ydeltaz)
 
         Sigmatilde_deltaz = GAMMAdeltaz.T.dot(Sigma.dot(GAMMAdeltaz))
-        # SELECTIONinloop = ForwardSelection.SelectionBIC(Ytildeinloop, Xtildeinloop, Sigmatilde_deltaz)
-        SELECTIONinloop = ForwardSelection.SelectionAdjR2(Ytildeinloop, Xtildeinloop)
+        SELECTIONinloop = ForwardSelection.SelectionAICforBS(Ytildeinloop, Xtildeinloop, Sigmatilde_deltaz)
+        # SELECTIONinloop = ForwardSelection.SelectionAdjR2(Ytildeinloop, Xtildeinloop)
         
         intervalinloop = overconditioning.OC_DA_BS_Criterion(ns, nt, a, b, XsXt_deltaz, 
                                                             Xtildeinloop, Ytildeinloop, Sigmatilde_deltaz, 
                                                             basis_var_deltaz, S_, h_, 
                                                             SELECTIONinloop, GAMMAdeltaz,seed)
+        citv += 1
         # print(f"intervalinloop: {intervalinloop}")
         detectedinter = intersection.Union(detectedinter, intervalinloop)
 
@@ -89,6 +91,9 @@ def para_DA_BSwithAIC(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F,seed = 0):
         # print(SELECTIONinloop)
         # print(f"Matched - fs: {itvfs} - da: {itvda}")
         TD = intersection.Union(TD, intervalinloop)
+    filename = f'Experiment/AIC_numitv_{ns}.txt'
+    with open(filename, 'a') as f:
+        f.write(str(citv)+ '\n')
     return TD
 
 def para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F):
@@ -97,6 +102,7 @@ def para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F):
     # print(f'M = {SELECTION_F}')
     z =  -20
     zmax = 20
+    citv = 0
     while z < zmax:
         z += 0.0001
 
@@ -123,7 +129,7 @@ def para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F):
                                                             Xtildeinloop, Ytildeinloop, Sigmatilde_deltaz, 
                                                             basis_var_deltaz, S_, h_, 
                                                             SELECTIONinloop, GAMMAdeltaz)
-
+        citv +=1
         # print(f"intervalinloop: {intervalinloop}")
 
         detectedinter = intersection.Union(detectedinter, intervalinloop)
@@ -135,6 +141,9 @@ def para_DA_BS(ns, nt, a, b, X, Sigma, S_, h_, SELECTION_F):
         # print(SELECTIONinloop)
         # print(f"Matched - fs: {itvfs} - da: {itvda}")
         TD = intersection.Union(TD, intervalinloop)
+    filename = f'Experiment/fixed_numitv_{ns}.txt'
+    with open(filename, 'a') as f:
+        f.write(str(citv)+ '\n')
     return TD
 
 

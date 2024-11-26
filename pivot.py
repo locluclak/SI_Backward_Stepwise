@@ -139,9 +139,9 @@ def pvalue_SI(seed, ns, nt, p, true_betaS, true_betaT, k):
     Sigmatilde = GAMMA.T.dot(Sigma.dot(GAMMA))
     # Best model from 1...p models by AIC criterion
     if k == -1:
-        # SELECTION_F = FS.SelectionAICforBS(Ytilde, Xtilde, Sigmatilde)
+        SELECTION_F = FS.SelectionAICforBS(Ytilde, Xtilde, Sigmatilde)
         # SELECTION_F = FS.SelectionBIC(Ytilde, Xtilde, Sigmatilde)
-        SELECTION_F = FS.SelectionAdjR2(Ytilde, Xtilde)
+        # SELECTION_F = FS.SelectionAdjR2(Ytilde, Xtilde)
     else:
         SELECTION_F = FS.fixedBS(Ytilde, Xtilde, k)[0]
     Xt_M = Xt[:, sorted(SELECTION_F)].copy()
