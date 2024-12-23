@@ -10,8 +10,8 @@ def run(iter = 0):
 
     # st = time.time()
     #___________________________________________________________
-    ns = 30
-    nt = 10
+    ns = 100
+    nt = 20
     p = 5
     betat = 0
     true_beta_s = np.full((p,1), 2) #source's beta
